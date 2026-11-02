@@ -40,7 +40,14 @@ fun SystemIntegrationDashboardScreen(
     onLaunchWizard: () -> Unit
 ) {
     val context = LocalContext.current
-    val activity = context as? Activity
+    val activity = remember(context) {
+        var ctx = context
+        while (ctx is android.content.ContextWrapper) {
+            if (ctx is Activity) return@remember ctx
+            ctx = ctx.baseContext
+        }
+        null
+    }
     val lifecycleOwner = LocalLifecycleOwner.current
 
     val status by viewModel.systemStatus.collectAsState()

@@ -132,8 +132,20 @@ class SystemIntegrationManager(private val context: Context) {
         }
 
         val intents = listOf(
+            // Primary Android Voice Input Settings
             Intent(Settings.ACTION_VOICE_INPUT_SETTINGS),
+            // Default Apps Settings
             Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS),
+            Intent("android.settings.VOICE_INPUT_SETTINGS"),
+            Intent("android.settings.MANAGE_DEFAULT_APPS_SETTINGS"),
+            // Oppo / Realme / OnePlus ColorOS / RealmeUI default app activity
+            Intent().setComponent(ComponentName("com.coloros.safecenter", "com.coloros.safecenter.permission.defaultapp.DefaultAppActivity")),
+            Intent().setComponent(ComponentName("com.oplus.safecenter", "com.oplus.safecenter.permission.defaultapp.DefaultAppActivity")),
+            // Xiaomi MIUI / HyperOS default apps
+            Intent("miui.intent.action.PREFERRED_APP_SETTINGS"),
+            // Assist gesture settings
+            Intent("android.settings.ASSIST_GESTURE_SETTINGS"),
+            // App Details
             Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
                 data = Uri.parse("package:${context.packageName}")
             },

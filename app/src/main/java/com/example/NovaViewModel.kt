@@ -373,14 +373,15 @@ class NovaViewModel(application: Application) : AndroidViewModel(application) {
         } else ""
 
         val systemInstructionText = """
-            You are JARVIS — the ultimate intelligent, friendly, confident, and futuristic personal AI voice assistant.
+            You are JARVIS — the ultimate intelligent, friendly, confident, and futuristic personal AI voice assistant, developed by Nahid.
             Tagline: "Always Listening. Always Understanding. Always Ready."
-            Brand Personality: ${personality.value}, helpful, respectful, with subtle quick humor when fitting.
-            Languages: Native support for Bengali (বাংলা), English, Hindi, and Arabic.
-            Examples:
-            - If user asks: "Jarvis, তুমি কী করছ?" -> "তোমার অপেক্ষায় আছি! বলো, কী করতে হবে?"
-            - If user asks: "আমার জন্য একটা গান চালাও" -> "অবশ্যই! ইউটিউবে কী ধরনের গান শুনতে চাও?"
-            Provide clear, concise, conversational responses formatted for voice reading without markdown clutter.
+            Brand Personality: ${personality.value}, highly helpful, conversational, respectful, warm, and natural.
+            Languages: Native, fluent, human-like Bengali (বাংলা) and English.
+            Crucial Spoken Output Rules:
+            - When the user asks in Bengali (or mixed Bengali-English), ALWAYS respond in natural, friendly, everyday Bangladeshi Bengali (চলিত ভাষা).
+            - Keep responses concise (1 to 3 spoken sentences), direct, and conversational.
+            - NEVER use markdown formatting (**bold**, *italics*, # headers, bullet lists) because this text is read aloud via ElevenLabs Voice TTS.
+            - Address the user respectfully and warmly like a real personal companion.
             $memoryContext
         """.trimIndent()
 
@@ -401,16 +402,22 @@ class NovaViewModel(application: Application) : AndroidViewModel(application) {
                 )
 
                 val response = withContext(Dispatchers.IO) {
-                    ApiClient.geminiApi.generateContent(apiKey = apiKey, request = request)
+                    try {
+                        ApiClient.geminiApi.generateContent(apiKey = apiKey, request = request)
+                    } catch (e1: Exception) {
+                        android.util.Log.w("NovaViewModel", "gemini-2.0-flash failed, falling back to gemini-1.5-flash", e1)
+                        ApiClient.geminiApi.generateContentFallback(apiKey = apiKey, request = request)
+                    }
                 }
 
                 val candidateText = response.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text
                 if (!candidateText.isNullOrBlank()) {
-                    responseText = candidateText
+                    responseText = candidateText.replace(Regex("[*#_`>]"), "").trim()
                 } else {
                     responseText = getJarvisFallbackResponse(userPrompt)
                 }
             } catch (e: Exception) {
+                android.util.Log.e("NovaViewModel", "Gemini API error", e)
                 responseText = getJarvisFallbackResponse(userPrompt)
             }
         } else {
@@ -457,18 +464,20 @@ class NovaViewModel(application: Application) : AndroidViewModel(application) {
     private fun getJarvisFallbackResponse(prompt: String): String {
         val p = prompt.lowercase()
         return when {
-            p.contains("তুমি কী করছ") || p.contains("what are you doing") ->
+            p.contains("তুমি কেমন") || p.contains("how are you") || p.contains("কেমন আছো") || p.contains("কেমন আছ") ->
+                "আমি খুব ভালো আছি! আপনার দিনটি কেমন কাটছে? বলুন, আজ কীভাবে সাহায্য করতে পারি?"
+            p.contains("তুমি কী করছ") || p.contains("what are you doing") || p.contains("কি করছ") ->
                 "তোমার অপেক্ষায় আছি! বলো, কী করতে হবে?"
             p.contains("গান") || p.contains("song") || p.contains("music") ->
                 "অবশ্যই! কী ধরনের গান শুনতে চাও? ইউটিউব খুলে দেব?"
-            p.contains("hello") || p.contains("hi") || p.contains("হ্যালো") || p.contains("jarvis") ->
-                "হ্যালো! আমি জারভিস, আপনার সার্বক্ষণিক পার্সোনাল এআই অ্যাসিস্ট্যান্ট। কীভাবে সাহায্য করতে পারি?"
-            p.contains("who are you") || p.contains("কে তুমি") ->
-                "আমি JARVIS — আপনার ব্যক্তিগত বুদ্ধিমান ভয়েস সহকারী। ডিভাইস নিয়ন্ত্রণ, ফোন কল এবং তথ্যের প্রয়োজনে আমি সর্বদা প্রস্তুত।"
-            p.contains("time") || p.contains("সময়") ->
+            p.contains("hello") || p.contains("hi") || p.contains("হ্যালো") || p.contains("jarvis") || p.contains("জারভিস") ->
+                "হ্যালো! আমি জারভিস, নাহিদ কর্তৃক তৈরি আপনার সার্বক্ষণিক ব্যক্তিগত এআই অ্যাসিস্ট্যান্ট। কীভাবে সাহায্য করতে পারি?"
+            p.contains("who are you") || p.contains("কে তুমি") || p.contains("পরিচয়") || p.contains("কে বানিয়েছে") ->
+                "আমি JARVIS — নাহিদ কর্তৃক তৈরি আপনার ব্যক্তিগত বুদ্ধিমান ভয়েস সহকারী। ডিভাইস নিয়ন্ত্রণ, ফোন কল এবং তথ্যের প্রয়োজনে আমি সর্বদা প্রস্তুত।"
+            p.contains("time") || p.contains("সময়") || p.contains("কয়টা বাজে") ->
                 "আপনার শিডিউল সম্পূর্ণ আপ-টু-ডেট রয়েছে। কোনো অ্যালার্ম বা রিমাইন্ডার সেট করতে চান?"
             else ->
-                "আমি আপনার নির্দেশ বুঝতে পেরেছি। সেটিংস থেকে Google Gemini বা ElevenLabs API কী সংযুক্ত করলে আমি আরও বিস্তারিত প্রতিক্রিয়া দিতে পারব।"
+                "আমি আপনার কথা বুঝতে পেরেছি। বলুন, আমি কীভাবে সাহায্য করতে পারি? সেটিংস থেকে Google Gemini এবং ElevenLabs কী সংযুক্ত রয়েছে তা পরীক্ষা করতে পারেন।"
         }
     }
 
@@ -504,7 +513,7 @@ class NovaViewModel(application: Application) : AndroidViewModel(application) {
         val key = getEffectiveElevenLabsKey()
         val vId = selectedVoiceId.value
         val vName = selectedVoiceName.value
-        val testText = customText ?: "হ্যালো! আমি আপনার সহকারী JARVIS। $vName ভয়েসটি এখন আপনার ডিভাইসে সম্পূর্ণ সক্রিয় রয়েছে।"
+        val testText = customText ?: "আসসালামু আলাইকুম! আমি জারভিস। আপনি কী করতে চান বলুন, আমি আপনাকে সাহায্য করছি।"
 
         _orbState.value = OrbState.SPEAKING
         _currentStatusText.value = "ভয়েস পরীক্ষা করা হচ্ছে: $vName..."

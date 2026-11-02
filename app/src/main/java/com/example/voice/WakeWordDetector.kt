@@ -88,7 +88,9 @@ class WakeWordDetector(
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
             putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
             putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3)
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.US.toLanguageTag())
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, "bn-BD")
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "bn-BD")
+            putExtra("android.speech.extra.EXTRA_ADDITIONAL_LANGUAGES", arrayOf("en-US", "bn-BD"))
         }
 
         try {
@@ -102,13 +104,33 @@ class WakeWordDetector(
         }
     }
 
+    private var lastWakeTriggerTime = 0L
+
     private fun checkMatches(matches: List<String>?) {
         if (matches.isNullOrEmpty()) return
+        val now = System.currentTimeMillis()
+        if (now - lastWakeTriggerTime < 2500L) return
+
+        val wakePhrases = listOf(
+            "hey jarvis",
+            "hello jarvis",
+            "hi jarvis",
+            "jarvis",
+            "হ্যালো জারভিস",
+            "হেই জারভিস",
+            "জারভিস",
+            "জার্ভিস"
+        )
+
         val target = targetWakePhrase.lowercase().trim()
         for (match in matches) {
             val text = match.lowercase().trim()
             _lastDetectedPhrase.value = text
-            if (text.contains(target) || text.contains("jarvis") || text.contains("জারভিস") || text.contains("hey jarvis")) {
+            val isMatched = wakePhrases.any { phrase -> text.contains(phrase) } ||
+                    (target.isNotBlank() && text.contains(target))
+
+            if (isMatched) {
+                lastWakeTriggerTime = now
                 onWakeWordDetected?.invoke()
                 break
             }

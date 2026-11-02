@@ -206,6 +206,39 @@ fun HelpSupportScreen(
                     }
                 }
             }
+
+            // Developer Brand Card
+            Surface(
+                shape = RoundedCornerShape(14.dp),
+                color = Color.White,
+                border = BorderStroke(1.dp, NovaSoftSky),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "JARVIS AI — Personal Voice Assistant",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        color = NovaTextPrimary
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Developed by Nahid",
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 13.sp,
+                        color = NovaElectricBlue
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "\"Always Listening. Always Understanding. Always Ready.\"",
+                        fontSize = 11.sp,
+                        color = NovaTextSecondary
+                    )
+                }
+            }
         }
     }
 }

@@ -38,6 +38,7 @@ class JarvisFloatingOverlayService : Service() {
             return
         }
 
+        instance = this
         try {
             windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
 
@@ -49,7 +50,11 @@ class JarvisFloatingOverlayService : Service() {
             }
 
             val density = resources.displayMetrics.density
-            val orbSizePx = (72 * density).toInt()
+            val orbSizePx = (76 * density).toInt()
+
+            val prefs = getSharedPreferences("jarvis_overlay_prefs", Context.MODE_PRIVATE)
+            val savedX = prefs.getInt("orb_x", (density * 24).toInt())
+            val savedY = prefs.getInt("orb_y", (density * 220).toInt())
 
             val params = WindowManager.LayoutParams(
                 orbSizePx,
@@ -60,8 +65,8 @@ class JarvisFloatingOverlayService : Service() {
                 PixelFormat.TRANSLUCENT
             ).apply {
                 gravity = Gravity.TOP or Gravity.START
-                x = 60
-                y = (240 * density).toInt()
+                x = savedX
+                y = savedY
             }
 
             // Create Animated Custom JARVIS Orb View
@@ -97,6 +102,7 @@ class JarvisFloatingOverlayService : Service() {
                         true
                     }
                     MotionEvent.ACTION_UP -> {
+                        prefs.edit().putInt("orb_x", params.x).putInt("orb_y", params.y).apply()
                         if (isClick) {
                             v.performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS)
                             val launchIntent = Intent(this, MainActivity::class.java).apply {
@@ -134,6 +140,9 @@ class JarvisFloatingOverlayService : Service() {
             }
         }
         floatingView = null
+        if (instance == this) {
+            instance = null
+        }
         _isOverlayActive.value = false
         Log.d(TAG, "Floating overlay destroyed")
     }
@@ -223,16 +232,34 @@ class JarvisFloatingOverlayService : Service() {
         private val _isOverlayActive = MutableStateFlow(false)
         val isOverlayActive: StateFlow<Boolean> = _isOverlayActive.asStateFlow()
 
+        private var instance: JarvisFloatingOverlayService? = null
+
+        fun setAppInForeground(inForeground: Boolean) {
+            try {
+                instance?.floatingView?.visibility = if (inForeground) View.GONE else View.VISIBLE
+            } catch (e: Exception) {
+                Log.e(TAG, "Error toggling overlay visibility", e)
+            }
+        }
+
         fun start(context: Context) {
             if (Settings.canDrawOverlays(context)) {
-                val intent = Intent(context, JarvisFloatingOverlayService::class.java)
-                context.startService(intent)
+                try {
+                    val intent = Intent(context, JarvisFloatingOverlayService::class.java)
+                    context.startService(intent)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to start floating overlay service", e)
+                }
             }
         }
 
         fun stop(context: Context) {
-            val intent = Intent(context, JarvisFloatingOverlayService::class.java)
-            context.stopService(intent)
+            try {
+                val intent = Intent(context, JarvisFloatingOverlayService::class.java)
+                context.stopService(intent)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to stop floating overlay service", e)
+            }
         }
     }
 }

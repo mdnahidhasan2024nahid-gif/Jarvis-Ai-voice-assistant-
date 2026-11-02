@@ -282,7 +282,7 @@ fun HomeScreen(
                                 Spacer(modifier = Modifier.width(8.dp))
                             }
                             Text(
-                                text = if (orbState == OrbState.IDLE && (statusText == "Ready" || statusText == "Tap to speak")) {
+                                text = if (orbState == OrbState.IDLE && (statusText == "Ready" || statusText == "Tap to speak" || statusText == "শ্রবণ থামানো হয়েছে")) {
                                     "Hello! How can I assist?"
                                 } else {
                                     statusText
@@ -298,72 +298,6 @@ fun HomeScreen(
                     }
 
                     Spacer(modifier = Modifier.height(18.dp))
-
-                    // 3-Button Action Dock: Camera, Royal Blue Mic FAB, Attachment/Sparkle
-                    Surface(
-                        shape = RoundedCornerShape(32.dp),
-                        color = Color.White,
-                        shadowElevation = 4.dp,
-                        border = BorderStroke(1.dp, NovaSoftSky)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            // Left: Camera Button (white circle)
-                            Surface(
-                                onClick = onOpenCamera,
-                                shape = CircleShape,
-                                color = Color.White,
-                                modifier = Modifier.size(42.dp)
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.PhotoCamera,
-                                        contentDescription = "Camera Vision",
-                                        tint = NovaTextSecondary,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
-                            }
-
-                            // Center: Elevated Royal Blue Voice FAB with pulse
-                            Surface(
-                                onClick = { viewModel.toggleListening() },
-                                shape = CircleShape,
-                                color = if (orbState == OrbState.LISTENING) NovaCyanGlow else NovaElectricBlue,
-                                shadowElevation = 6.dp,
-                                modifier = Modifier.size(54.dp)
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Icon(
-                                        imageVector = if (orbState == OrbState.LISTENING) Icons.Default.GraphicEq else Icons.Default.Mic,
-                                        contentDescription = "Speak to JARVIS",
-                                        tint = Color.White,
-                                        modifier = Modifier.size(26.dp)
-                                    )
-                                }
-                            }
-
-                            // Right: Document / Upload / Gallery Button (white circle)
-                            Surface(
-                                onClick = onOpenFileAssistant,
-                                shape = CircleShape,
-                                color = Color.White,
-                                modifier = Modifier.size(42.dp)
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.AddPhotoAlternate,
-                                        contentDescription = "File & Image Assistant",
-                                        tint = NovaTextSecondary,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
-                            }
-                        }
-                    }
                 }
             }
 
@@ -511,9 +445,33 @@ fun HomeScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 3.dp),
+                            .padding(horizontal = 10.dp, vertical = 2.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        IconButton(
+                            onClick = onOpenCamera,
+                            modifier = Modifier.size(36.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.PhotoCamera,
+                                contentDescription = "Camera Vision",
+                                tint = NovaTextSecondary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+
+                        IconButton(
+                            onClick = onOpenFileAssistant,
+                            modifier = Modifier.size(36.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.AddPhotoAlternate,
+                                contentDescription = "File & Image Assistant",
+                                tint = NovaTextSecondary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+
                         TextField(
                             value = textInput,
                             onValueChange = { textInput = it },
@@ -544,15 +502,13 @@ fun HomeScreen(
                             modifier = Modifier.weight(1f)
                         )
 
-                        // Blue Circular Action / Send Button
+                        // Circular Send Button
                         Surface(
                             onClick = {
                                 if (textInput.isNotBlank()) {
                                     viewModel.processUserInput(textInput)
                                     textInput = ""
                                     keyboardController?.hide()
-                                } else {
-                                    viewModel.toggleListening()
                                 }
                             },
                             shape = CircleShape,
@@ -562,7 +518,7 @@ fun HomeScreen(
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
-                                    imageVector = if (textInput.isNotBlank()) Icons.AutoMirrored.Filled.Send else Icons.AutoMirrored.Filled.Send,
+                                    imageVector = Icons.AutoMirrored.Filled.Send,
                                     contentDescription = "Send",
                                     tint = Color.White,
                                     modifier = Modifier.size(17.dp)

@@ -48,6 +48,11 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        // Initialize floating overlay if overlay permission is granted
+        if (android.provider.Settings.canDrawOverlays(this)) {
+            JarvisFloatingOverlayService.start(this)
+        }
+
         handleAssistIntent(intent)
 
         setContent {
@@ -59,16 +64,25 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Stop floating overlay while in foreground to avoid duplicate orb
-        JarvisFloatingOverlayService.stop(this)
+        // Hide floating overlay while in foreground to avoid duplicate orb
+        JarvisFloatingOverlayService.setAppInForeground(true)
         viewModel.refreshSystemStatus()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // Reveal floating overlay immediately when leaving foreground
+        if (android.provider.Settings.canDrawOverlays(this)) {
+            JarvisFloatingOverlayService.start(this)
+            JarvisFloatingOverlayService.setAppInForeground(false)
+        }
     }
 
     override fun onStop() {
         super.onStop()
-        // Seamlessly activate floating animated orb overlay when app moves to background
+        // Ensure floating overlay remains visible over other applications/launcher
         if (android.provider.Settings.canDrawOverlays(this)) {
-            JarvisFloatingOverlayService.start(this)
+            JarvisFloatingOverlayService.setAppInForeground(false)
         }
     }
 
