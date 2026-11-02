@@ -1,0 +1,8 @@
+{
+  "name": "JARVIS",
+  "description": "Always Listening. Always Understanding. Always Ready. Advanced Personal AI Voice Assistant powered by Gemini and ElevenLabs.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
