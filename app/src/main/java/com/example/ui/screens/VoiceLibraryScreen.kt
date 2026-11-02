@@ -43,6 +43,7 @@ fun VoiceLibraryScreen(
     val stability by viewModel.voiceStability.collectAsState()
     val similarity by viewModel.voiceSimilarity.collectAsState()
     val style by viewModel.voiceStyle.collectAsState()
+    val speakerBoost by viewModel.voiceSpeakerBoost.collectAsState()
     val selectedVoiceId by viewModel.selectedVoiceId.collectAsState()
     val isLoading by viewModel.isLoadingVoices.collectAsState()
     var selectedCategory by remember { mutableStateOf("All") }
